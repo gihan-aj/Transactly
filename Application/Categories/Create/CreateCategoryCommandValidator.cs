@@ -10,7 +10,7 @@ namespace Application.Categories.Create
             RuleFor(c => c.Name).MustAsync(
                 async (name, _) =>
                 {
-                    return !await categoryRepository.IsNameUniqueAsync(name);
+                    return !await categoryRepository.IsNameExistsAsync(name);
                 })
                 .WithMessage("The name must be unique.");
         }

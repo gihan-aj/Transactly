@@ -29,7 +29,7 @@ namespace Persistence.Repositories
                 .ToListAsync();
         }
 
-        public async Task<bool> IsNameUniqueAsync(string name)
+        public async Task<bool> IsNameExistsAsync(string name)
         {
             return await _context.Categories.AnyAsync(c => c.Name == name);
         }

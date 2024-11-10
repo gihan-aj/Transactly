@@ -25,6 +25,22 @@ namespace Persistence
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
+            var softDeleteEntries = ChangeTracker
+                .Entries<ISoftDeletable>()
+                .Where(e => e.State == EntityState.Deleted);
+
+            foreach(var entry in softDeleteEntries)
+            {
+                entry.State = EntityState.Modified;
+                entry.Property(nameof(ISoftDeletable.IsDeleted)).CurrentValue = true;
+                entry.Property(nameof(ISoftDeletable.DeletedOn)).CurrentValue = DateTime.UtcNow;
+            }
+
+            return await PublishDomainEvents(cancellationToken);
+        }
+
+        private async Task<int> PublishDomainEvents(CancellationToken cancellationToken)
+        {
             var domainEvents = ChangeTracker.Entries<Entity>()
                 .Select(e => e.Entity)
                 .Where(e => e.GetDomainEvents().Any())

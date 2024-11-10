@@ -15,6 +15,6 @@ namespace Domain.Categories
 
         void Remove(Category category);
 
-        Task<bool> IsNameUniqueAsync(string name);
+        Task<bool> IsNameExistsAsync(string name);
     }
 }

@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using Application.Abstractions.Behaviors;
+using FluentValidation;
 using MediatR.NotificationPublishers;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,6 +15,7 @@ namespace Application
                 config =>
                 {
                     config.RegisterServicesFromAssembly(assembly);
+                    config.AddOpenBehavior(typeof(ValidationBehavior<,>));
                     config.NotificationPublisher = new TaskWhenAllPublisher();
                 });
 
