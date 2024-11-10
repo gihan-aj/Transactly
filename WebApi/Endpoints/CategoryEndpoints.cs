@@ -6,6 +6,8 @@ using Application.Categories.Get;
 using Application.Categories.GetById;
 using Application.Categories.Update;
 using Application.Common;
+using Asp.Versioning;
+using Asp.Versioning.Builder;
 using Domain.Categories;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -20,7 +22,7 @@ namespace WebApi.Endpoints
     {
         public static void MapCategoryEndpoints(this IEndpointRouteBuilder app)
         {
-            app.MapPost("api/categories", async (CreateCategoryRequest request, ISender sender) =>
+            app.MapPost("categories", async (CreateCategoryRequest request, ISender sender) =>
             {
                 var command = new CreateCategoryCommand(request.Name.ToLower(), request.Description?.ToLower());
 
@@ -28,7 +30,7 @@ namespace WebApi.Endpoints
                 return Results.Ok();
             });
 
-            app.MapGet("api/categories", async (
+            app.MapGet("categories", async (
                 string? searchTerm,
                 string? sortColumn,
                 string? sortOrder,
@@ -41,7 +43,7 @@ namespace WebApi.Endpoints
                 return Results.Ok(categories);
             });
 
-            app.MapGet("api/categories/{id:guid}", async (Guid id, ISender sender) =>
+            app.MapGet("categories/{id:guid}", async (Guid id, ISender sender) =>
             {
                 try
                 {
@@ -53,7 +55,7 @@ namespace WebApi.Endpoints
                 }
             });
             
-            app.MapPut("api/categories/{id:guid}", async (Guid id, [FromBody]UpdateCategoryRequest request, ISender sender) =>
+            app.MapPut("categories/{id:guid}", async (Guid id, [FromBody]UpdateCategoryRequest request, ISender sender) =>
             {
                 try
                 {
@@ -67,7 +69,7 @@ namespace WebApi.Endpoints
                 }
             });
             
-            app.MapDelete("api/categories/{id:guid}", async (Guid id, ISender sender) =>
+            app.MapDelete("categories/{id:guid}", async (Guid id, ISender sender) =>
             {
                 try
                 {
@@ -78,9 +80,9 @@ namespace WebApi.Endpoints
                 {
                     return Results.NotFound(e.Message);
                 }
-            });
+            }).MapToApiVersion(1);
             
-            app.MapPut("api/categories/activate", async ([FromBody]BulkRequest request, ISender sender) =>
+            app.MapPut("categories/activate", async ([FromBody]BulkRequest request, ISender sender) =>
             {
                 try
                 {
@@ -93,7 +95,7 @@ namespace WebApi.Endpoints
                 }
             });
             
-            app.MapPut("api/categories/deactivate", async ([FromBody]BulkRequest request, ISender sender) =>
+            app.MapPut("categories/deactivate", async ([FromBody]BulkRequest request, ISender sender) =>
             {
                 try
                 {
@@ -106,7 +108,7 @@ namespace WebApi.Endpoints
                 }
             });
             
-            app.MapDelete("api/categories/delete", async ([FromBody]BulkRequest request, ISender sender) =>
+            app.MapDelete("categories/delete", async ([FromBody]BulkRequest request, ISender sender) =>
             {
                 try
                 {
@@ -117,7 +119,7 @@ namespace WebApi.Endpoints
                 {
                     return Results.NotFound(e.Message);
                 }
-            });
+            }).MapToApiVersion(2);
         }
     }
 }
