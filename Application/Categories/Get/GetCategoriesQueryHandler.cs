@@ -1,7 +1,8 @@
-﻿using Application.Common;
+﻿using Application.Abstractions.Messaging;
+using Application.Common;
 using Application.Data;
 using Domain.Categories;
-using MediatR;
+using SharedKernel;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Application.Categories.Get
 {
-    internal sealed class GetCategoriesQueryHandler : IRequestHandler<GetCategoriesQuery, PagedList<CategoryResponse>>
+    internal sealed class GetCategoriesQueryHandler : ICommandHandler<GetCategoriesQuery, PagedList<CategoryResponse>>
     {
         private readonly IApplicationDbContext _context;
 
@@ -18,7 +19,7 @@ namespace Application.Categories.Get
         {
             _context = context;
         }
-        public async Task<PagedList<CategoryResponse>> Handle(GetCategoriesQuery request, CancellationToken cancellationToken)
+        public async Task<Result<PagedList<CategoryResponse>>> Handle(GetCategoriesQuery request, CancellationToken cancellationToken)
         {
             IQueryable<Category> categoryQuery = _context.Categories;
 

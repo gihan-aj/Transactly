@@ -1,15 +1,17 @@
-﻿using Application.Categories.Get;
+﻿using Application.Abstractions.Messaging;
+using Application.Categories.Get;
 using Application.Data;
 using Domain.Categories;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using SharedKernel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Application.Categories.GetById
 {
-    internal sealed class GetCategoryQueryHandler : IRequestHandler<GetCategoryQuery, CategoryResponse>
+    internal sealed class GetCategoryQueryHandler : IQueryHandler<GetCategoryQuery, CategoryResponse>
     {
         private readonly IApplicationDbContext _context;
 
@@ -18,7 +20,7 @@ namespace Application.Categories.GetById
             _context = context;
         }
 
-        public async Task<CategoryResponse> Handle(GetCategoryQuery request, CancellationToken cancellationToken)
+        public async Task<Result<CategoryResponse>> Handle(GetCategoryQuery request, CancellationToken cancellationToken)
         {
             var category = await _context.Categories
                 .Where(c => c.Id == new CategoryId(request.Id))
@@ -31,7 +33,7 @@ namespace Application.Categories.GetById
 
             if (category is null)
             {
-                throw new CategoryNotFoundException(new CategoryId(request.Id));
+                return Result.Failure<CategoryResponse>(CategoryErrors.NotFound(request.Id));
             }
 
             return category;

@@ -1,13 +1,16 @@
-﻿using Application.Data;
+﻿using Application.Abstractions.Messaging;
+using Application.Categories.Get;
+using Application.Data;
 using Domain.Categories;
-using MediatR;
+using SharedKernel;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Application.Categories.Activate
 {
-    internal sealed class ActivateCategoriesCommandHandler : IRequestHandler<ActivateCategoriesCommand>
+    internal sealed class ActivateCategoriesCommandHandler : ICommandHandler<ActivateCategoriesCommand>
     {
         private readonly ICategoryRepository _categoryRepository;
         private readonly IUnitOfWork _unitOfWork;
@@ -18,7 +21,7 @@ namespace Application.Categories.Activate
             _unitOfWork = unitOfWork;
         }
 
-        public async Task Handle(ActivateCategoriesCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(ActivateCategoriesCommand request, CancellationToken cancellationToken)
         {
             var categoryIds = new List<CategoryId>();
 
@@ -29,16 +32,30 @@ namespace Application.Categories.Activate
 
             var categories = await _categoryRepository.GetRangeAsync(categoryIds);
 
-            foreach (var category in categories)
+            if(categories.Any())
             {
-                if (!category.IsActive)
+                foreach (var category in categories)
                 {
-                    category.Activate();
-                    _categoryRepository.Update(category);
+                    if (!category.IsActive)
+                    {
+                        category.Activate();
+                        _categoryRepository.Update(category);
+                    }
                 }
+
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                return Result.Success();
             }
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            if(categoryIds.Count == 1)
+            {
+                return Result.Failure<CategoryResponse>(CategoryErrors.NotFound(categoryIds[0].Value));
+            }
+
+            return Result.Failure<CategoryResponse>(CategoryErrors.BulkNotFound);
+
+
         }
     }
 }

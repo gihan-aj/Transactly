@@ -1,13 +1,15 @@
-﻿using Application.Data;
+﻿using Application.Abstractions.Messaging;
+using Application.Categories.Get;
+using Application.Data;
 using Domain.Categories;
-using MediatR;
+using SharedKernel;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Application.Categories.Update
 {
-    internal sealed class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryCommand>
+    internal sealed class UpdateCategoryCommandHandler : ICommandHandler<UpdateCategoryCommand>
     {
         private readonly ICategoryRepository _categoryRepository;
         private readonly IUnitOfWork _unitOfWork;
@@ -18,24 +20,26 @@ namespace Application.Categories.Update
             _unitOfWork = unitOfWork;
         }
 
-        public async Task Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
         {
             var category = await _categoryRepository.GetByIdAsync(new CategoryId(request.Id));
 
             if(category is null)
             {
-                throw new CategoryNotFoundException(new CategoryId(request.Id));
+                return Result.Failure<CategoryResponse>(CategoryErrors.NotFound(request.Id));
             }
 
             if(category.Name != request.Name && await _categoryRepository.IsNameExistsAsync(request.Name))
             {
-                throw new Exception("The name must be unique.");
+                return Result.Failure<CategoryResponse>(CategoryErrors.DuplicateName(request.Name));
             }
 
             category.Update(request.Name, request.Description);
 
             _categoryRepository.Update(category);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            return Result.Success();
         }
     }
 }

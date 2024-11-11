@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace Application.Abstractions.Behaviors
 {
     public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-        where TRequest : ICommandBase
+        where TRequest : IBaseCommand
     {
         private readonly IEnumerable<IValidator<TRequest>> _validators;
 

@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using SharedKernel;
 using System;
 
 namespace WebApi.Endpoints
@@ -26,8 +27,8 @@ namespace WebApi.Endpoints
             {
                 var command = new CreateCategoryCommand(request.Name.ToLower(), request.Description?.ToLower());
 
-                await sender.Send(command);
-                return Results.Ok();
+                var result = await sender.Send(command);
+                return result.IsSuccess ? Results.Created() : Results.BadRequest(result.Error);
             });
 
             app.MapGet("categories", async (
@@ -39,87 +40,60 @@ namespace WebApi.Endpoints
                 ISender sender) =>
             {
                 var query = new GetCategoriesQuery(searchTerm, sortColumn, sortOrder, page, pageSize);
-                var categories = await sender.Send(query);
-                return Results.Ok(categories);
+                Result<PagedList<CategoryResponse>> result = await sender.Send(query);
+
+                return Results.Ok(result.Value);
             });
 
             app.MapGet("categories/{id:guid}", async (Guid id, ISender sender) =>
             {
-                try
-                {
-                    return Results.Ok(await sender.Send(new GetCategoryQuery(id)));
-                }
-                catch (CategoryNotFoundException e)
-                {
-                    return Results.NotFound(e.Message);
-                }
+                var query = new GetCategoryQuery(id);
+                Result<CategoryResponse> response = await sender.Send(query);
+
+                return response.IsSuccess ? Results.Ok(response.Value) : Results.NotFound(response.Error);
             });
             
             app.MapPut("categories/{id:guid}", async (Guid id, [FromBody]UpdateCategoryRequest request, ISender sender) =>
             {
-                try
+                var command = new UpdateCategoryCommand(id, request.Name.ToLower(), request.Description?.ToLower());
+                var result = await sender.Send(command); 
+
+                if (result.IsSuccess)
                 {
-                    var command = new UpdateCategoryCommand(id, request.Name.ToLower(), request.Description?.ToLower()); 
-                    await sender.Send(command);
                     return Results.NoContent();
                 }
-                catch (CategoryNotFoundException e)
+
+                if (result.Error == CategoryErrors.DuplicateName(request.Name))
                 {
-                    return Results.NotFound(e.Message);
+                    return Results.BadRequest(result.Error);
                 }
+
+                return Results.NotFound(result.Error);
             });
-            
-            app.MapDelete("categories/{id:guid}", async (Guid id, ISender sender) =>
-            {
-                try
-                {
-                    await sender.Send(new DeleteCategoryCommand(id));
-                    return Results.NoContent();
-                }
-                catch (CategoryNotFoundException e)
-                {
-                    return Results.NotFound(e.Message);
-                }
-            }).MapToApiVersion(1);
             
             app.MapPut("categories/activate", async ([FromBody]BulkRequest request, ISender sender) =>
             {
-                try
-                {
-                    await sender.Send(new ActivateCategoriesCommand(request.Ids));
-                    return Results.NoContent();
-                }
-                catch (CategoryNotFoundException e)
-                {
-                    return Results.NotFound(e.Message);
-                }
+                var query = new ActivateCategoriesCommand(request.Ids);
+                var result = await sender.Send(query);
+
+                return result.IsSuccess ? Results.NoContent() : Results.NotFound(result.Error);
             });
             
             app.MapPut("categories/deactivate", async ([FromBody]BulkRequest request, ISender sender) =>
             {
-                try
-                {
-                    await sender.Send(new DeactivateCategoriesCommand(request.Ids));
-                    return Results.NoContent();
-                }
-                catch (CategoryNotFoundException e)
-                {
-                    return Results.NotFound(e.Message);
-                }
+                var query = new DeactivateCategoriesCommand(request.Ids);
+                var result = await sender.Send(query);
+
+                return result.IsSuccess ? Results.NoContent() : Results.NotFound(result.Error);
             });
-            
-            app.MapDelete("categories/delete", async ([FromBody]BulkRequest request, ISender sender) =>
+
+            app.MapDelete("categories/delete", async ([FromBody] BulkRequest request, ISender sender) =>
             {
-                try
-                {
-                    await sender.Send(new DeleteCategoriesCommand(request.Ids));
-                    return Results.NoContent();
-                }
-                catch (CategoryNotFoundException e)
-                {
-                    return Results.NotFound(e.Message);
-                }
-            }).MapToApiVersion(2);
+                var query = new DeleteCategoriesCommand(request.Ids);
+                var result = await sender.Send(query);
+
+                return result.IsSuccess ? Results.NoContent() : Results.NotFound(result.Error);
+            });
         }
     }
 }

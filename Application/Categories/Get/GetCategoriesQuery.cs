@@ -1,5 +1,5 @@
-﻿using Application.Common;
-using MediatR;
+﻿using Application.Abstractions.Messaging;
+using Application.Common;
 using System;
 
 namespace Application.Categories.Get
@@ -9,7 +9,7 @@ namespace Application.Categories.Get
         string? SortColumn,
         string? SortOrder,
         int Page,
-        int PageSize) : IRequest<PagedList<CategoryResponse>>;
+        int PageSize) : ICommand<PagedList<CategoryResponse>>;
 
     public record CategoryResponse(Guid Id, string Name, string? Description, bool IsActive);
 }

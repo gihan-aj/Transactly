@@ -1,13 +1,17 @@
-﻿using Application.Data;
+﻿using Application.Abstractions.Messaging;
+using Application.Categories.Get;
+using Application.Data;
 using Domain.Categories;
 using MediatR;
+using SharedKernel;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Application.Categories.Delete
 {
-    internal sealed class DeleteCategoriesCommandHandler : IRequestHandler<DeleteCategoriesCommand>
+    internal sealed class DeleteCategoriesCommandHandler : ICommandHandler<DeleteCategoriesCommand>
     {
         private readonly ICategoryRepository _categoryRepository;
         private readonly IUnitOfWork _unitOfWork;
@@ -17,7 +21,7 @@ namespace Application.Categories.Delete
             _categoryRepository = categoryRepository;
             _unitOfWork = unitOfWork;
         }
-        public async Task Handle(DeleteCategoriesCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(DeleteCategoriesCommand request, CancellationToken cancellationToken)
         {
             var categoryIds = new List<CategoryId>();
 
@@ -28,12 +32,25 @@ namespace Application.Categories.Delete
 
             var categories = await _categoryRepository.GetRangeAsync(categoryIds);
 
-            foreach (var category in categories)
+            if (categories.Any())
             {
-                _categoryRepository.Remove(category);
+                foreach (var category in categories)
+                {
+                    _categoryRepository.Remove(category);
+                }
+
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                return Result.Success();
             }
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            if (categoryIds.Count == 1)
+            {
+                return Result.Failure<CategoryResponse>(CategoryErrors.NotFound(categoryIds[0].Value));
+            }
+
+            return Result.Failure<CategoryResponse>(CategoryErrors.BulkNotFound);
+
         }
     }
 }

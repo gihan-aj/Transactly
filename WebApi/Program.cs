@@ -10,6 +10,7 @@ using Persistence;
 using Serilog;
 using System.Collections.Generic;
 using WebApi.Endpoints;
+using WebApi.Extensions;
 using WebApi.Middleware;
 using WebApi.OpenApi;
 
@@ -55,7 +56,7 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<RequestLogContextMiddleware>();
 app.UseSerilogRequestLogging();
 
-// Add versions
+// Add api versions
 ApiVersionSet apiVersionSet = app.NewApiVersionSet()
      .HasApiVersion(new ApiVersion(1))
      .HasApiVersion(new ApiVersion(2))
@@ -84,6 +85,8 @@ if (app.Environment.IsDevelopment())
                 options.SwaggerEndpoint(url, name);
             }
         });
+
+    app.ApplyMigrations();
 }
 
 app.Run();
