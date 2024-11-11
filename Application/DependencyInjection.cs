@@ -15,7 +15,7 @@ namespace Application
                 config =>
                 {
                     config.RegisterServicesFromAssembly(assembly);
-                    config.AddOpenBehavior(typeof(ValidationBehavior<,>));
+                    config.AddOpenBehavior(typeof(ValidationPipelineBehavior<,>));
                     config.NotificationPublisher = new TaskWhenAllPublisher();
                 });
 

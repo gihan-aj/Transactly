@@ -9,6 +9,6 @@ namespace Domain.Categories
 
         public static Error NotFound(Guid id) => new("Category.NotFound", $"The category with the Id = '{id}' was not found");
 
-        public static Error DuplicateName(string name) => new("Category.DuplicateName", $"The name, '{name}' is not unique");
+        public static Error DuplicateName(string name) => new("Category.DuplicateName", $"The name, '{name}' is already in use");
     }
 }

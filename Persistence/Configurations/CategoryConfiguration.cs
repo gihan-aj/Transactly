@@ -19,10 +19,13 @@ namespace Persistence.Configurations
                 .HasMaxLength(50);
 
             builder.HasIndex(c => c.Name)
-                .IsUnique();
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
 
             //builder.HasIndex(c => new { c.IsActive, c.Name });
             builder.HasIndex(c => c.IsActive);
+
+            builder.HasIndex(c => c.IsDeleted);
 
             builder.Property(c => c.Description)
                 .HasMaxLength(255);

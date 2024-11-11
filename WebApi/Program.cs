@@ -11,6 +11,7 @@ using Serilog;
 using System.Collections.Generic;
 using WebApi.Endpoints;
 using WebApi.Extensions;
+using WebApi.Infrastructure;
 using WebApi.Middleware;
 using WebApi.OpenApi;
 
@@ -26,6 +27,10 @@ builder.Host.UseSerilog(
     {
         configuration.ReadFrom.Configuration(context.Configuration);
     });
+
+// Global exception handling
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 // API versioning
 builder.Services.AddApiVersioning(
@@ -51,9 +56,10 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-
 app.UseMiddleware<RequestLogContextMiddleware>();
+
+app.UseExceptionHandler();
+
 app.UseSerilogRequestLogging();
 
 // Add api versions
