@@ -51,11 +51,28 @@ builder.Services.ConfigureOptions<ConfigureSwaggerGenOptions>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+var devOrigin = "angular_front";
+builder.Services.AddCors(
+    options =>
+    {
+        options.AddPolicy(name: devOrigin,
+            policy =>
+            {
+                policy.WithOrigins("http://localhost:4200")
+                .AllowAnyHeader()
+                .AllowAnyMethod(); ;
+            });
+    });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
 
+// CORS
+app.UseCors(devOrigin);
+
+// Middleware
 app.UseMiddleware<RequestLogContextMiddleware>();
 
 app.UseExceptionHandler();
