@@ -26,6 +26,7 @@ namespace WebApi.Infrastructure
                 Status = StatusCodes.Status500InternalServerError,
                 Type = "InternalServerError",
                 Title = "Server Error",
+                Detail = exception.Message //dev only
             };
 
             httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;

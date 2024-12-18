@@ -16,7 +16,7 @@ namespace Domain.Categories
 
         public string Name { get; private set; }
 
-        public string? Description { get; private set; }    
+        public string? Description { get; private set; }  
         
         public static Category Create(string name, string? description)
         {

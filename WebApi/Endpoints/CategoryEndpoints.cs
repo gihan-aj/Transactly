@@ -123,7 +123,7 @@ namespace WebApi.Endpoints
             }
 
 
-            app.MapDelete("categories/delete", Delete);
+            app.MapPut("categories/delete", Delete);
 
             static async Task<IResult> Delete([FromBody] BulkRequest request, ISender sender)
             {
